@@ -1,22 +1,22 @@
 from socket import *	  #for establishing a network connection
-from Queue import Queue	  #Used as an inbox
+from queue import Queue	  #Used as an inbox
 import threading          #Used to readincoming traffic and store it in the inbox queue
-import thread			  #used to read messages from inbox
+import _thread			  #used to read messages from inbox
+from enum import Enum     
 
-#Python 2 doesn't support Enums.
+
 """When creating an EnigmaNetwork object, it must
 	be specified whether it will run as a server or 
 	a client"""
-class SocketType:
+class SocketType(enum):
 	SERVER = 1	#If running as a server, pass in 'SocketType.SERVER'
 	CLIENT = 2	#If running as a client, pass in 'SocketType.CLIENT'
+	
 
-lock = threading.Lock() #used to safely access resources shared my multiple threads
-	
-	
+#A class meant to connect machines to each other over a network so that they can pass strings back and forth
 class EnigmaNet (threading.Thread):
 	'Network class for the enigma machine project'
-	
+	lock = threading.Lock() #used to safely access resources shared my multiple threads
 	
 	#initializes an EnigmaNet object
 	#PARAMS:
@@ -55,9 +55,9 @@ class EnigmaNet (threading.Thread):
 			raise ValueError("message must be a non-null string")
 		#sending a message is different depending on whether it is a server socket or a client socket
 		if self.socket_type == 2:			
-			self.sock.send(message)									
+			self.sock.send(bytes(message, 'UTF-8'))									
 		else:
-			self.c.send(message)									
+			self.c.send(bytes(message, 'UTF-8'))									
 	
 	#Will return the oldest message in the inbox, or nothing if there are no messages
 	def recieve_message(self):
@@ -91,7 +91,7 @@ class EnigmaNet (threading.Thread):
 		self.sock.listen(1)						 	      #listening for 1 connection
 		c, addr = self.sock.accept()			          #establishing connection with client
 		self.c = c
-		print "connection established"
+		print ("connection established")
 		self.connection_established = True
 		while not self.close_connection:
 			message = c.recv(1024)					  	  #if recv doesn't return anything, an exception will be raised
@@ -107,7 +107,7 @@ class EnigmaNet (threading.Thread):
 		self.sock = socket()					          #creating the socket
 		self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) #needed to prevent errors that may happen when binding to a recently used port
 		self.sock.connect((self.address, self.port))	  #attempting to connect 
-		print "connection established"
+		print ("connection established")
 		self.connection_established = True
 		while not self.close_connection:
 			message = self.sock.recv(1024)			 	  #the thread will stall here and wait for data	
@@ -126,13 +126,13 @@ class EnigmaNet (threading.Thread):
 	def access_inbox(self, function, message = 0):
 		accessed = False					#set accessed to false, that way it will loop until it is able to gain access
 		while not accessed:
-			lock.acquire()					#lock this part so only one thread can use it
+			EnigmaNet.lock.acquire()		#lock this part so only one thread can use it
 			if message == 0:	
 				message = function()	
 			else:
-				function(message)
+				function(message.decode(encoding="utf-8", errors="strict"))
 			accessed = True					#set accessed to true
-			lock.release()					#release it so the other thread can use it
+			EnigmaNet.lock.release()		#release it so the other thread can use it
 		return message
 
 #end class
@@ -143,19 +143,19 @@ class EnigmaNet (threading.Thread):
 #you want to be the server, and change host to '<server's IP>' on the client machine.
 host = 'localhost' 
 port = 5000
-socktype = int(raw_input("enter sock type 1:server, 2:client: "))
+socktype = int(input("enter sock type 1:server, 2:client: "))
 en = EnigmaNet(socktype, host, port)
 en.start()
 
 def readInbox(threadName, delay):
 	while True:
 		if en.have_mail():
-			print en.recieve_message()
+			print (en.recieve_message())
 
-thread.start_new_thread(readInbox, ("ThreadyMcThreadFace", 10))
+_thread.start_new_thread(readInbox, ("ThreadyMcThreadFace", 10))
 
-input = ''
-while not input == '-1':
-	input = raw_input()
-	en.send_message(input)
+user_input = ''
+while not user_input == '-1':
+	user_input = input()
+	en.send_message(user_input)
 en.disconnect()
