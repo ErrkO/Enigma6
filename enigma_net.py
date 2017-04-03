@@ -2,20 +2,20 @@ from socket import *	  #for establishing a network connection
 from queue import Queue	  #Used as an inbox
 import threading          #Used to readincoming traffic and store it in the inbox queue
 import _thread			  #used to read messages from inbox
-from enum import Enum     
 
 
 """When creating an EnigmaNetwork object, it must
 	be specified whether it will run as a server or 
 	a client"""
-class SocketType(enum):
+class SocketType:
 	SERVER = 1	#If running as a server, pass in 'SocketType.SERVER'
 	CLIENT = 2	#If running as a client, pass in 'SocketType.CLIENT'
 	
 
-#A class meant to connect machines to each other over a network so that they can pass strings back and forth
+
 class EnigmaNet (threading.Thread):
 	'Network class for the enigma machine project'
+	
 	lock = threading.Lock() #used to safely access resources shared my multiple threads
 	
 	#initializes an EnigmaNet object
@@ -38,11 +38,10 @@ class EnigmaNet (threading.Thread):
 			raise TypeError("port must be an int")
 		threading.Thread.__init__(self)					#calling base class constructor
 		self.socket_type = socket_type					#setting the socket type	
-		self.inbox = Queue()							#initializing inbox queue
 		self.address = address							#saving the address
 		self.port = port								#saving the port
-		self.close_connection = False					#set this to true to terminate conversation
-		self.connection_established = False				#gets set to true when a connection is made
+		self.inbox = Queue()							#initializing inbox queue			
+		self.connection_established = False				
 	
 	
 	#puts a message in the outbox. The other thread will handle it.
@@ -54,23 +53,30 @@ class EnigmaNet (threading.Thread):
 		if message is None or type(message) is not str:				
 			raise ValueError("message must be a non-null string")
 		#sending a message is different depending on whether it is a server socket or a client socket
-		if self.socket_type == 2:			
-			self.sock.send(bytes(message, 'UTF-8'))									
-		else:
-			self.c.send(bytes(message, 'UTF-8'))									
+		if self.connection_established:
+			if self.socket_type == 2:			
+				self.sock.send(bytes(message, 'UTF-8'))									
+			else:
+				self.c.send(bytes(message, 'UTF-8'))									
+	
 	
 	#Will return the oldest message in the inbox, or nothing if there are no messages
+	#RETURNS: the message at the top of the inbox
 	def recieve_message(self):
 		if not self.inbox.empty():
 			return self.access_inbox(self.inbox.get)
 	
+	
 	#call this method to close the socket and stop the thread.
 	def disconnect(self):
-		self.close_connection = True
+		self.connection_established = False
+	
 	
 	#will return true if there is a message in the inbox, false otherwise
 	def have_mail(self):
 		return not self.inbox.empty()
+	
+	
 	
 	#private helpers
 	#------------------------------------------------------------------------------------
@@ -85,36 +91,45 @@ class EnigmaNet (threading.Thread):
 	
 	#creates a server socket.
 	def __start_server(self):
-		self.sock = socket()					          #creating the socket
-		self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) #needed to prevent errors that may happen when binding to a recently used port
-		self.sock.bind((self.address, self.port))         #binding it the the address and port
-		self.sock.listen(1)						 	      #listening for 1 connection
-		c, addr = self.sock.accept()			          #establishing connection with client
-		self.c = c
-		print ("connection established")
-		self.connection_established = True
-		while not self.close_connection:
-			message = c.recv(1024)					  	  #if recv doesn't return anything, an exception will be raised
-			self.access_inbox(self.inbox.put, message)	  #puts a message into the inbox, gets skipped if exception gets called
-			if message == '':							  #if recv ever recieves zero bytes, the connection was broken
-				self.close_connection = True
-				break;
+		try:
+			self.sock = socket()					          #creating the socket
+			self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) #needed to prevent errors that may happen when binding to a recently used port
+			self.sock.bind((self.address, self.port))         #binding it the the address and port
+			self.sock.listen(1)						 	      #listening for 1 connection
+			c, addr = self.sock.accept()			          #establishing connection with client
+			self.c = c
+			print ("connection established")
+			self.connection_established = True
+		except Exception:
+			print("An error occurred when creating the server")
+		while self.connection_established:
+			try:
+				message = c.recv(1024)					  #if recv doesn't return anything, an exception will be raised
+				self.access_inbox(self.inbox.put, message)#puts a message into the inbox, gets skipped if exception gets called
+			except Exception:
+				print("Connection lost")
+				self.connection_established = False
 		self.sock.close()
 		
 	
 	#starts a client socket and attempts to connect to a server socket
+	#If a it can't connect to the server socket for whatever reason, an error will occur
 	def __start_client(self):
-		self.sock = socket()					          #creating the socket
-		self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) #needed to prevent errors that may happen when binding to a recently used port
-		self.sock.connect((self.address, self.port))	  #attempting to connect 
-		print ("connection established")
-		self.connection_established = True
-		while not self.close_connection:
-			message = self.sock.recv(1024)			 	  #the thread will stall here and wait for data	
-			self.access_inbox(self.inbox.put, message)    #puts a message into the inbox, gets skipped if exception gets called
-			if message == '':							  #if recv ever recieves zero bytes, the connection was broken
-				self.close_connection = True
-				break;
+		try:
+			self.sock = socket()					          #creating the socket
+			self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) #needed to prevent errors that may happen when binding to a recently used port
+			self.sock.connect((self.address, self.port))	  #attempting to connect 
+			print ("connection established")
+			self.connection_established = True
+		except Exception:
+			print("an error occurred when trying to connect to the server")
+		while self.connection_established:
+			try:
+				message = self.sock.recv(1024)			 	  #the thread will stall here and wait for data	
+				self.access_inbox(self.inbox.put, message)    #puts a message into the inbox, gets skipped if exception gets called
+			except Exception:
+				print("Connection lost")
+				self.connection_established = False
 		self.sock.close()
 		
 	
@@ -126,13 +141,13 @@ class EnigmaNet (threading.Thread):
 	def access_inbox(self, function, message = 0):
 		accessed = False					#set accessed to false, that way it will loop until it is able to gain access
 		while not accessed:
-			EnigmaNet.lock.acquire()		#lock this part so only one thread can use it
+			EnigmaNet.lock.acquire()		#thread locked so only one thread can use the inbox at one time
 			if message == 0:	
-				message = function()	
+				message = function()	    #a message gets read from the inbox
 			else:
-				function(message.decode(encoding="utf-8", errors="strict"))
-			accessed = True					#set accessed to true
-			EnigmaNet.lock.release()		#release it so the other thread can use it
+				function(message.decode(encoding="utf-8", errors="strict")) # message gets put into the inbox
+			accessed = True					#set accessed to true 
+			EnigmaNet.lock.release()		#release it so the other thread can use 
 		return message
 
 #end class
