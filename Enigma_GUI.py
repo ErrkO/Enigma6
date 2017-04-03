@@ -21,6 +21,7 @@ def OpenFile():
 def About():
     messagebox.showinfo("About","This is The Seal Team 6's Enigma Python Program")
 	
+#Function to display a properly styled message box
 def About2():
 	popout = Tk()
 	mbox = popout
@@ -40,6 +41,7 @@ def About2():
 	
 	popout.mainloop()
 
+#Depracated message box
 def MboxExample():
 	popout = tkinter.Tk()
 	mbox = Mbox
