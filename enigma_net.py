@@ -1,7 +1,6 @@
 from socket import *	  #for establishing a network connection
 from queue import Queue	  #Used as an inbox
 import threading          #Used to readincoming traffic and store it in the inbox queue
-import _thread			  #used to read messages from inbox
 
 
 """When creating an EnigmaNetwork object, it must
@@ -104,12 +103,17 @@ class EnigmaNet (threading.Thread):
 			print("An error occurred when creating the server")
 		while self.connection_established:
 			try:
-				message = c.recv(1024)					  #if recv doesn't return anything, an exception will be raised
-				self.access_inbox(self.inbox.put, message)#puts a message into the inbox, gets skipped if exception gets called
+				message = c.recv(1024)					  	  #if recv doesn't return anything, an exception will be raised
+				if message.decode(encoding="utf-8", errors="strict") == '': #if zero bytes are recieved, the connection was closed by the other user
+					self.connection_established = False
+					print("The other user has disconnected")
+					break;
+				self.access_inbox(self.inbox.put, message)    #puts a message into the inbox, gets skipped if exception gets called
 			except Exception:
 				print("Connection lost")
 				self.connection_established = False
-		self.sock.close()
+		c.close()
+		self.c = ''
 		
 	
 	#starts a client socket and attempts to connect to a server socket
@@ -119,14 +123,20 @@ class EnigmaNet (threading.Thread):
 			self.sock = socket()					          #creating the socket
 			self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) #needed to prevent errors that may happen when binding to a recently used port
 			self.sock.connect((self.address, self.port))	  #attempting to connect 
-			print ("connection established")
+			print("connection established")
 			self.connection_established = True
 		except Exception:
 			print("an error occurred when trying to connect to the server")
 		while self.connection_established:
 			try:
 				message = self.sock.recv(1024)			 	  #the thread will stall here and wait for data	
+				if message.decode(encoding="utf-8", errors="strict") == '': #if zero bytes are recieved, the connection was closed by the other user
+					self.connection_established = False
+					print("The other user has disconnected")
+					break
 				self.access_inbox(self.inbox.put, message)    #puts a message into the inbox, gets skipped if exception gets called
+			#except socket.timeout:
+			#	continue
 			except Exception:
 				print("Connection lost")
 				self.connection_established = False
@@ -136,8 +146,8 @@ class EnigmaNet (threading.Thread):
 	#this method is meant to either put a message into the inbox queue, or get a message out of the inbox queue
 	#because inbox is a shared resource between threads, it had to be more complicated than I would have liked.
 	#PARAMS 
-	#	message(optional): the message to put into the queue
 	#	function: a function pointer. pass in either Queue.gets, or Queue.puts
+	#	message(optional): the message to put into the queue
 	def access_inbox(self, function, message = 0):
 		accessed = False					#set accessed to false, that way it will loop until it is able to gain access
 		while not accessed:
@@ -149,28 +159,3 @@ class EnigmaNet (threading.Thread):
 			accessed = True					#set accessed to true 
 			EnigmaNet.lock.release()		#release it so the other thread can use 
 		return message
-
-#end class
-		
-
-#******************TESTING***************************
-#if you want to test this on two seperate computers, change host to '0.0.0.0' on the machine that
-#you want to be the server, and change host to '<server's IP>' on the client machine.
-host = 'localhost' 
-port = 5000
-socktype = int(input("enter sock type 1:server, 2:client: "))
-en = EnigmaNet(socktype, host, port)
-en.start()
-
-def readInbox(threadName, delay):
-	while True:
-		if en.have_mail():
-			print (en.recieve_message())
-
-_thread.start_new_thread(readInbox, ("ThreadyMcThreadFace", 10))
-
-user_input = ''
-while not user_input == '-1':
-	user_input = input()
-	en.send_message(user_input)
-en.disconnect()
