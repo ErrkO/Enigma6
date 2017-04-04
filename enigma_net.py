@@ -15,6 +15,9 @@ class SocketType:
 class EnigmaNet (threading.Thread):
 	'Network class for the enigma machine project'
 	
+	host='localhost'
+	port=5250
+	
 	lock = threading.Lock() #used to safely access resources shared my multiple threads
 	
 	#initializes an EnigmaNet object
@@ -75,7 +78,11 @@ class EnigmaNet (threading.Thread):
 	def have_mail(self):
 		return not self.inbox.empty()
 	
-	
+	def Set_Host(newHost):
+		host=newHost
+		
+	def Set_Port(newPort):
+		return(1)
 	
 	#private helpers
 	#------------------------------------------------------------------------------------
