@@ -3,19 +3,40 @@ from tkinter import * #GUI calls
 from tkinter import messagebox
 
 from Mbox import *
+import string
 
 #from enigma import * #Enigma Encryption Code
 #from enigma_net import * #Enigma networking code
 
+"""Globals"""
 rotorNum = 0
 rotorPos = []
+rotorSet = []
+plugNum = 0
+plugCon = []
+#letters = ["a","b","c","d","e","f","g","h","i","j","k","l","m",
+			#"n","o","p","q","r","s","t","u","v","w","x","y","z"]
+letters = list(string.ascii_lowercase)
 
 """" Function Section"""
+# Initializes the rotors to 0 positions
 def InitRotorPos():
 	global rotorPos
 	for i in range(0,rotorNum):
 		rotorPos.append(0)
 
+# Initializes the rotor settings to -1
+def InitRotorSetting():
+	global rotorSet
+	for i in range(0,rotorNum):
+		rotorSet.append(-1)
+
+# Initializes the plugCon to a space		
+def InitPlugCon():
+	global plugCon
+	for i in range(0,plugNum*2):
+		plugCon.append(" ")
+	
 #Function for a new file
 def NewFile():
     print("New File!")
@@ -32,7 +53,8 @@ def About():
 #Function to display a properly styled message box
 def About2():
 	Popout("About","This is The Seal Team 6 Enigma Python Program")
-	
+
+# Function to display a simple message box with a configurable title and message
 def Popout(title,msg):
 	popout1 = Tk()
 	popout1.title(title)
@@ -67,13 +89,12 @@ def MboxExample():
 	b_loggedin['command'] = lambda: Mbox(D['user'])
 	b_loggedin.pack()
 
+# GUI Function to retrieve the number of rotors the user desires
 def Rotor_Num():
 	popout = Tk()
 	popout.title("Rotor Order")
 	#popout.geometry("400x100+30+30")
 	popout.config(bg="black")
-	
-	num = StringVar()
 	
 	Label(popout,text="How many Rotors are there? ",
 			bg="black",
@@ -81,8 +102,6 @@ def Rotor_Num():
 			font="times 12").grid(row=0,column=0)
 			
 	e = Entry(popout)
-	
-	#e1.bind("<Return>",SetRNum)
 	
 	setbttn = Button(popout,text="Set",command=(lambda: SetRNum(e.get(),closebttn)),
 					bg="black",
@@ -96,11 +115,13 @@ def Rotor_Num():
 	closebttn.grid(row=2,column=1)
 	
 	e.grid(row=0,column=1)
-	
+
+# Simple function to clear the screen	
 def ClearScreen(frame):
 	for widget in frame.winfo_children():
 		widget.destroy()
-	
+
+# Helper function to enable the close button and set the rotor number
 def SetRNum(val,button):
 	global rotorNum
 	rotorNum = int(val)
@@ -109,10 +130,12 @@ def SetRNum(val,button):
 	else:
 		button['state']='disabled'
 		Popout("Error","Must have more than zero rotors")
-	
+
+# Potentially deprecated Print function
 def PrintRNum():
 	print(val)
 
+# GUI Function to get the position of all the rotors
 def Rotor_Order():
 	popout = Tk()
 	popout.title("Rotor Order")
@@ -134,26 +157,20 @@ def Rotor_Order():
 					fg="lime")
 	setbttn.grid(row=rotorNum+1,column=1)
 	
-	printbttn = Button(popout,text="Print",command=(lambda: PrintRotorOrder(entries)),
-					bg="black",
-					fg="lime")
-	printbttn.grid(row=rotorNum+1,column=1+1)
-	
 	closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
 					bg="black",
 					fg="lime",
 					state=DISABLED)
 	closebttn.grid(row=rotorNum+2,column=1)
-	
+
+# Helper function to enable the button and set the rotor positions
 def SetRotorOrder(entries,button):
 	global rotorPos
-	i = 0
 	
 	InitRotorPos()
 	setting = []
 	for entry in entries:
 		setting.append(int(entry.get()))
-		i += 1
 		
 	for i in range(0,rotorNum):
 		rotorPos[i]=setting[i]
@@ -163,7 +180,8 @@ def SetRotorOrder(entries,button):
 		Popout("Error","You have duplicate rotor settings")
 	elif CheckForDuplicate(rotorPos) == False:
 		button['state']='normal'
-	
+
+# Deprecated print function for testing
 def PrintRotorOrder(entries):
 	#InitRotorPos()
 	for entry in entries:
@@ -172,7 +190,8 @@ def PrintRotorOrder(entries):
 		
 	for i in range(0,rotorNum):
 		print("Output rotor {0}".format(rotorPos[i]))
-	
+
+# Helper function to check for duplicate rotors in the SetRotorOrder function
 def CheckForDuplicate(rotorPos):
 	for i in range(0,rotorNum):
 		for j in range(0,rotorNum):
@@ -186,12 +205,173 @@ def CheckForDuplicate(rotorPos):
 				
 	return False
 
+# GUI Function to get the rotor settings
 def Rotor_Setting():
-	print(2)
-				
-def Plug_Board():
-	print(3)
+	popout = Tk()
+	popout.title("Rotor Settings")
+	#popout.geometry("400x100+30+30")
+	popout.config(bg="black")
 	
+	entries = []
+	for i in range(0,rotorNum):
+		Label(popout,text=("Enter the setting for rotor {0} <0-26>: ".format(i+1)),
+			bg="black",
+			fg="lime",
+			font="times 12").grid(row=i,column=0)
+		e2 = Entry(popout)
+		e2.grid(row=i, column=1)
+		entries.append(e2)
+	
+	setbttn = Button(popout,text="Set",command=(lambda: SetRotorSetting(entries,closebttn)),
+					bg="black",
+					fg="lime")
+	setbttn.grid(row=rotorNum+1,column=1)
+	
+	closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
+					bg="black",
+					fg="lime",
+					state=DISABLED)
+	closebttn.grid(row=rotorNum+2,column=1)
+
+# Helper function to set the rotor settings
+def SetRotorSetting(entries, button):
+	global rotorSet
+	InitRotorSetting()
+	
+	setting = []
+	for entry in entries:
+		setting.append(int(entry.get()))
+	
+	for i in range(0,rotorNum):
+		rotorSet[i] = setting[i]
+		
+	if (CheckForOoR(rotorSet) == True):
+		button['state']='disabled'
+		Popout("Error","You're rotor settings cannot be above 26 or below 0")
+	else:
+		button['state']='normal'
+	
+# Function to check the rotor settings for out of range
+def CheckForOoR(array):
+	for i in range(0,rotorNum):
+		if rotorSet[i] < 0 or rotorSet[i] > 26:
+			return True
+			break
+	
+	return False
+
+# GUI Function to determine the number of plugs
+def Plug_Number():
+	popout = Tk()
+	popout.title("Rotor Settings")
+	#popout.geometry("400x100+30+30")
+	popout.config(bg="black")
+	
+	Label(popout,text="How many Plugs are there? ",
+			bg="black",
+			fg="lime",
+			font="times 12").grid(row=0,column=0)
+			
+	e = Entry(popout)
+	
+	setbttn = Button(popout,text="Set",command=(lambda: SetPNum(e.get(),closebttn)),
+					bg="black",
+					fg="lime")
+	setbttn.grid(row=0,column=3)
+	
+	closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
+					bg="black",
+					fg="lime",
+					state=DISABLED)
+	closebttn.grid(row=2,column=1)
+	
+	e.grid(row=0,column=1)
+
+# Helper function to set the plugNum
+def SetPNum(val,button):
+	global plugNum
+	plugNum = int(val)
+	if (plugNum > 0):
+		button['state']='normal'
+	else:
+		button['state']='disabled'
+		Popout("Error","Must have more than zero plugs")
+
+# GUI Function to get and set the plug connections
+def Plug_Board():
+	if plugNum <= 0:
+		Popout("Error","Make sure your plugs are set")
+	elif plugNum > 0:
+		popout = Tk()
+		popout.title("Plug Settings")
+		#popout.geometry("400x100+30+30")
+		popout.config(bg="black")
+	
+		entries = []
+		j = 0
+		for i in range(0,plugNum):
+			Label(popout,text=("Enter plug connection {0}-{1} <a-z>: ".format(i+1,1)),
+					bg="black",
+					fg="lime",
+					font="times 12").grid(row=j,column=0)
+			e2 = Entry(popout)
+			e2.grid(row=j, column=1)
+			j += 1
+			Label(popout,text=("Enter plug connection {0}-{1} <a-z>: ".format(i+1,2)),
+					bg="black",
+					fg="lime",
+					font="times 12").grid(row=j,column=0)
+			e3 = Entry(popout)
+			e3.grid(row=j, column=1)
+			j += 1
+			entries.append(e2)
+			entries.append(e3)
+	
+		setbttn = Button(popout,text="Set",command=(lambda: SetPlugSetting(entries,closebttn)),
+						bg="black",
+						fg="lime")
+		setbttn.grid(row=(plugNum*2)+1,column=1)
+	
+		closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
+						bg="black",
+						fg="lime",
+						state=DISABLED)
+		closebttn.grid(row=(plugNum*2)+2,column=1)
+
+def SetPlugSetting(entries,button):
+	global plugCon
+	InitPlugCon()
+	
+	setting = []
+	for entry in entries:
+		el = entry.get()
+		setting.append(el.lower())
+	
+	for i in range(0,plugNum*2):
+		plugCon[i] = setting[i]
+		
+	if (CheckForLetter(plugCon) == False):
+		button['state']='disabled'
+		Popout("Error","You are only allowed to input letters")
+	else:
+		button['state']='normal'
+
+# Checks to see if the array contains letters
+def CheckForLetter(array):	# true means there is a letter false means not a letter
+	boolforpos = []
+	for i in range(plugNum*2):
+		boolforpos[i] = False
+		for j in range(26):
+			if array[i] == letters[j]:
+				boolforpos[i] = boolforpos[i] or True
+				
+	alltrue = boolforpos[0]
+	
+	for i in range(1,(plugNum*2)):
+		alltrue = alltrue and boolforpos[i]
+		
+	return alltrue
+
 def GetIP():
 	print(4)
 	
@@ -225,6 +405,7 @@ menu.add_cascade(label="Set",menu=setmenu)
 setmenu.add_command(label="Rotor Number", command=Rotor_Num)
 setmenu.add_command(label="Rotor Order", command=Rotor_Order)
 setmenu.add_command(label="Rotor Setting", command=Rotor_Setting)
+setmenu.add_command(label="Plug Number", command=Plug_Number)
 setmenu.add_command(label="Plug Board", command=Plug_Board)
 
 #Networking Menu
