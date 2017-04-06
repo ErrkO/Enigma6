@@ -69,7 +69,7 @@ def Popout(title,msg):
 	okbttn = Button(popout1,text="OK",command=popout1.destroy,
 					bg="black",
 					fg="lime")
-	okbttn.pack(pady=15)
+	okbttn.pack(pady=10)
 	
 	popout1.mainloop()
 
@@ -90,7 +90,7 @@ def MboxExample():
 	b_loggedin.pack()
 
 # GUI Function to retrieve the number of rotors the user desires
-def Rotor_Num():
+def Rotor_Num(var=NONE):
 	popout = Tk()
 	popout.title("Rotor Order")
 	#popout.geometry("400x100+30+30")
@@ -108,11 +108,19 @@ def Rotor_Num():
 					fg="lime")
 	setbttn.grid(row=0,column=3)
 	
-	closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
-					bg="black",
-					fg="lime",
-					state=DISABLED)
-	closebttn.grid(row=2,column=1)
+	if var == NONE:
+		closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
+						bg="black",
+						fg="lime",
+						state=DISABLED)
+		closebttn.grid(row=2,column=1)
+		
+	else:
+		closebttn = Button(popout,text="Next",command=(lambda: Next(popout,Rotor_Order)),
+						bg="black",
+						fg="lime",
+						state=DISABLED)
+		closebttn.grid(row=2,column=1)
 	
 	e.grid(row=0,column=1)
 
@@ -120,6 +128,10 @@ def Rotor_Num():
 def ClearScreen(frame):
 	for widget in frame.winfo_children():
 		widget.destroy()
+		
+def Next(frame,func):
+	frame.destroy()
+	func(1)
 
 # Helper function to enable the close button and set the rotor number
 def SetRNum(val,button):
@@ -136,32 +148,43 @@ def PrintRNum():
 	print(val)
 
 # GUI Function to get the position of all the rotors
-def Rotor_Order():
-	popout = Tk()
-	popout.title("Rotor Order")
-	#popout.geometry("400x100+30+30")
-	popout.config(bg="black")
+def Rotor_Order(var=NONE):
+	if rotorNum <= 0:
+		Popout("Error","Make sure your rotors are set")
+	else:
+		popout = Tk()
+		popout.title("Rotor Order")
+		#popout.geometry("400x100+30+30")
+		popout.config(bg="black")
 	
-	entries = []
-	for i in range(0,rotorNum):
-		Label(popout,text=("Set the rotor for position {0}: ".format(i+1)),
-			bg="black",
-			fg="lime",
-			font="times 12").grid(row=i,column=0)
-		e2 = Entry(popout)
-		e2.grid(row=i, column=1)
-		entries.append(e2)
+		entries = []
+		for i in range(0,rotorNum):
+			Label(popout,text=("Set the rotor for position {0}: ".format(i+1)),
+				bg="black",
+				fg="lime",
+				font="times 12").grid(row=i,column=0)
+			e2 = Entry(popout)
+			e2.grid(row=i, column=1)
+			entries.append(e2)
 		
-	setbttn = Button(popout,text="Set",command=(lambda: SetRotorOrder(entries,closebttn)),
-					bg="black",
-					fg="lime")
-	setbttn.grid(row=rotorNum+1,column=1)
+		setbttn = Button(popout,text="Set",command=(lambda: SetRotorOrder(entries,closebttn)),
+						bg="black",
+						fg="lime")
+		setbttn.grid(row=rotorNum+1,column=1)
 	
-	closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
-					bg="black",
-					fg="lime",
-					state=DISABLED)
-	closebttn.grid(row=rotorNum+2,column=1)
+		if var == NONE:
+			closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
+						bg="black",
+						fg="lime",
+						state=DISABLED)
+			closebttn.grid(row=rotorNum+2,column=1)
+			
+		else:
+			closebttn = Button(popout,text="Next",command=(lambda: Next(popout,Rotor_Setting)),
+						bg="black",
+						fg="lime",
+						state=DISABLED)
+			closebttn.grid(row=rotorNum+2,column=1)
 
 # Helper function to enable the button and set the rotor positions
 def SetRotorOrder(entries,button):
@@ -175,10 +198,10 @@ def SetRotorOrder(entries,button):
 	for i in range(0,rotorNum):
 		rotorPos[i]=setting[i]
 		
-	if CheckForDuplicate(rotorPos) == True:
+	if CheckForDuplicate(rotorPos,rotorNum) == True:
 		button['state']='disabled'
 		Popout("Error","You have duplicate rotor settings")
-	elif CheckForDuplicate(rotorPos) == False:
+	elif CheckForDuplicate(rotorPos,rotorNum) == False:
 		button['state']='normal'
 
 # Deprecated print function for testing
@@ -192,10 +215,10 @@ def PrintRotorOrder(entries):
 		print("Output rotor {0}".format(rotorPos[i]))
 
 # Helper function to check for duplicate rotors in the SetRotorOrder function
-def CheckForDuplicate(rotorPos):
-	for i in range(0,rotorNum):
-		for j in range(0,rotorNum):
-			if (rotorPos[i]==rotorPos[j] and i != j):
+def CheckForDuplicate(array,length):
+	for i in range(0,length):
+		for j in range(0,length):
+			if (array[i]==array[j] and i != j):
 				return True
 				break
 			
@@ -206,32 +229,43 @@ def CheckForDuplicate(rotorPos):
 	return False
 
 # GUI Function to get the rotor settings
-def Rotor_Setting():
-	popout = Tk()
-	popout.title("Rotor Settings")
-	#popout.geometry("400x100+30+30")
-	popout.config(bg="black")
+def Rotor_Setting(var=NONE):
+	if rotorNum <= 0:
+		Popout("Error","Make sure your rotors are set")
+	else:
+		popout = Tk()
+		popout.title("Rotor Settings")
+		#popout.geometry("400x100+30+30")
+		popout.config(bg="black")
 	
-	entries = []
-	for i in range(0,rotorNum):
-		Label(popout,text=("Enter the setting for rotor {0} <0-26>: ".format(i+1)),
-			bg="black",
-			fg="lime",
-			font="times 12").grid(row=i,column=0)
-		e2 = Entry(popout)
-		e2.grid(row=i, column=1)
-		entries.append(e2)
+		entries = []
+		for i in range(0,rotorNum):
+			Label(popout,text=("Enter the setting for rotor {0} <0-26>: ".format(i+1)),
+				bg="black",
+				fg="lime",
+				font="times 12").grid(row=i,column=0)
+			e2 = Entry(popout)
+			e2.grid(row=i, column=1)
+			entries.append(e2)
 	
-	setbttn = Button(popout,text="Set",command=(lambda: SetRotorSetting(entries,closebttn)),
-					bg="black",
-					fg="lime")
-	setbttn.grid(row=rotorNum+1,column=1)
-	
-	closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
-					bg="black",
-					fg="lime",
-					state=DISABLED)
-	closebttn.grid(row=rotorNum+2,column=1)
+		setbttn = Button(popout,text="Set",command=(lambda: SetRotorSetting(entries,closebttn)),
+						bg="black",
+						fg="lime")
+		setbttn.grid(row=rotorNum+1,column=1)
+		
+		if var == NONE:
+			closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
+						bg="black",
+						fg="lime",
+						state=DISABLED)
+			closebttn.grid(row=rotorNum+2,column=1)
+			
+		else:
+			closebttn = Button(popout,text="Next",command=(lambda: Next(popout,Plug_Number)),
+						bg="black",
+						fg="lime",
+						state=DISABLED)
+			closebttn.grid(row=rotorNum+2,column=1)
 
 # Helper function to set the rotor settings
 def SetRotorSetting(entries, button):
@@ -261,7 +295,7 @@ def CheckForOoR(array):
 	return False
 
 # GUI Function to determine the number of plugs
-def Plug_Number():
+def Plug_Number(var=NONE):
 	popout = Tk()
 	popout.title("Rotor Settings")
 	#popout.geometry("400x100+30+30")
@@ -279,11 +313,19 @@ def Plug_Number():
 					fg="lime")
 	setbttn.grid(row=0,column=3)
 	
-	closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
+	if var == NONE:
+		closebttn = Button(popout,text="Close",command=(lambda: popout.destroy()),
 					bg="black",
 					fg="lime",
 					state=DISABLED)
-	closebttn.grid(row=2,column=1)
+		closebttn.grid(row=2,column=1)
+			
+	else:
+		closebttn = Button(popout,text="Next",command=(lambda: Next(popout,Plug_Board)),
+					bg="black",
+					fg="lime",
+					state=DISABLED)
+		closebttn.grid(row=2,column=1)
 	
 	e.grid(row=0,column=1)
 
@@ -298,7 +340,7 @@ def SetPNum(val,button):
 		Popout("Error","Must have more than zero plugs")
 
 # GUI Function to get and set the plug connections
-def Plug_Board():
+def Plug_Board(var=NONE):
 	if plugNum <= 0:
 		Popout("Error","Make sure your plugs are set")
 	elif plugNum > 0:
@@ -350,15 +392,18 @@ def SetPlugSetting(entries,button):
 	for i in range(0,plugNum*2):
 		plugCon[i] = setting[i]
 		
-	if (CheckForLetter(plugCon) == False):
+	if (CheckForLetter(plugCon) == False or CheckForDuplicate(plugCon,plugNum*2) == True):
 		button['state']='disabled'
-		Popout("Error","You are only allowed to input letters")
+		Popout("Error","You are only allowed to input letters,\n and letters cannot be duplicate")
 	else:
 		button['state']='normal'
 
 # Checks to see if the array contains letters
 def CheckForLetter(array):	# true means there is a letter false means not a letter
 	boolforpos = []
+	for i in range(plugNum*2):
+		boolforpos.append(False)
+	
 	for i in range(plugNum*2):
 		boolforpos[i] = False
 		for j in range(26):
@@ -401,7 +446,7 @@ filemenu.add_command(label="Exit", command=root.quit)
 #Setting the Enigma Menu
 setmenu = Menu(menu,background='black',foreground='lime',
 				activebackground='lime',activeforeground='black')
-menu.add_cascade(label="Set",menu=setmenu)
+menu.add_cascade(label="Change",menu=setmenu)
 setmenu.add_command(label="Rotor Number", command=Rotor_Num)
 setmenu.add_command(label="Rotor Order", command=Rotor_Order)
 setmenu.add_command(label="Rotor Setting", command=Rotor_Setting)
@@ -428,6 +473,11 @@ Label(root,
 		bg="black",
 		fg="lime",
 		font="times 15 bold").pack()
+		
+setbttn = Button(root,text="Set All Settings",command=(lambda: Rotor_Num(1)),
+					bg="black",
+					fg="lime")
+setbttn.pack()
 
 
 
