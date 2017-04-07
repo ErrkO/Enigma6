@@ -38,9 +38,11 @@ def InitPlugCon():
 	for i in range(0,plugNum*2):
 		plugCon.append(" ")
 
+# Helper print function
 def Print(val):
 	print(val)
-		
+
+# Generates a keyString	
 def GenerateKeyString():
 	global keyString
 	
@@ -59,7 +61,11 @@ def GenerateKeyString():
 	for i in range(plugNum*2):
 		pcstring += str(plugCon[i])
 		
-	return rostring + rsstring + pnstring + pcstring
+	keyString = rostring + rsstring + pnstring + pcstring
+	
+def GetKStr(func):
+	func
+	return keyString
 	
 #Function for a new file
 def NewFile():
@@ -404,6 +410,7 @@ def Plug_Board(var=NONE):
 						state=DISABLED)
 		closebttn.grid(row=(plugNum*2)+2,column=1)
 
+# Helper function to set the plug settings
 def SetPlugSetting(entries,button):
 	global plugCon
 	InitPlugCon()
@@ -503,7 +510,7 @@ setbttn = Button(root,text="Set All Settings",command=(lambda: Rotor_Num(1)),
 					fg="lime")
 setbttn.pack()
 
-printbttn = Button(root,text="Print Key String",command=(lambda: Print(GenerateKeyString())),
+printbttn = Button(root,text="Print Key String",command=(lambda: Print(GetKStr(GenerateKeyString()))),
 					bg="black",
 					fg="lime")
 printbttn.pack()
