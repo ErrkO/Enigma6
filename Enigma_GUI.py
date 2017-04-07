@@ -17,6 +17,7 @@ plugCon = []
 #letters = ["a","b","c","d","e","f","g","h","i","j","k","l","m",
 			#"n","o","p","q","r","s","t","u","v","w","x","y","z"]
 letters = list(string.ascii_lowercase)
+keyString = ""
 
 """" Function Section"""
 # Initializes the rotors to 0 positions
@@ -36,6 +37,29 @@ def InitPlugCon():
 	global plugCon
 	for i in range(0,plugNum*2):
 		plugCon.append(" ")
+
+def Print(val):
+	print(val)
+		
+def GenerateKeyString():
+	global keyString
+	
+	rostring = ""
+	rsstring = ""
+	pnstring = str(plugNum)
+	pcstring = ""
+	
+	for i in range(rotorNum):
+		rostring += str(rotorPos[i])
+		if rotorSet[i] < 10:
+			rsstring += str(0) + str(rotorSet[i])
+		else:
+			rsstring += str(rotorSet[i])
+	
+	for i in range(plugNum*2):
+		pcstring += str(plugCon[i])
+		
+	return rostring + rsstring + pnstring + pcstring
 	
 #Function for a new file
 def NewFile():
@@ -478,6 +502,11 @@ setbttn = Button(root,text="Set All Settings",command=(lambda: Rotor_Num(1)),
 					bg="black",
 					fg="lime")
 setbttn.pack()
+
+printbttn = Button(root,text="Print Key String",command=(lambda: Print(GenerateKeyString())),
+					bg="black",
+					fg="lime")
+printbttn.pack()
 
 
 
