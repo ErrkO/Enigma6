@@ -20,6 +20,11 @@ letters = list(string.ascii_lowercase)
 keyString = ""
 
 """" Function Section"""
+def InitKstr():
+	global keyString
+	
+	keyString = ""
+	
 # Initializes the rotors to 0 positions
 def InitRotorPos():
 	global rotorPos
@@ -66,6 +71,71 @@ def GenerateKeyString():
 def GetKStr(func):
 	func
 	return keyString
+	
+def Save_KS():
+	popout = Tk()
+	popout.title("Save Keystring")
+	#popout.geometry("400x100+30+30")
+	popout.config(bg="black")
+	
+	Label(popout,text="File name: ",
+			bg="black",
+			fg="lime",
+			font="times 12").grid(row=0,column=0)
+			
+	e = Entry(popout)
+	
+	setbttn = Button(popout,text="Save",command=(lambda: SaveKeyString(e.get())),
+					bg="black",
+					fg="lime")
+	setbttn.grid(row=0,column=3)
+	
+	e.grid(row=0,column=1)
+	
+def SaveKeyString(fileName):
+	fs = open(fileName + ".txt", "w")
+	fs.write(keyString)
+	fs.close()
+
+def Load_KS():
+	popout = Tk()
+	popout.title("Load Keystring")
+	#popout.geometry("400x100+30+30")
+	popout.config(bg="black")
+	
+	Label(popout,text="File name: ",
+			bg="black",
+			fg="lime",
+			font="times 12").grid(row=0,column=0)
+			
+	e = Entry(popout)
+	
+	setbttn = Button(popout,text="load",command=(lambda: LoadKeyString(e.get())),
+					bg="black",
+					fg="lime")
+	setbttn.grid(row=0,column=3)
+	
+	e.grid(row=0,column=1)
+	
+def LoadKeyString(fileName):
+	global keyString
+	fs = open(fileName+".txt", "r+")
+	
+	keyString = ""
+	chararr = []
+	
+	#tempkstr = fs.read(100)
+	
+	keyString = fs.read()
+	
+	# for i in range(0,99):
+		# if tempkstr[i] != " " or tempkstr[i] != "":
+			# chararr.append(tempkstr[i])
+	
+	# for i in range(0,chararr.length()):
+		# keyString += chararr[i]
+	
+	fs.close()
 	
 #Function for a new file
 def NewFile():
@@ -471,6 +541,9 @@ menu.add_cascade(label="File", menu=filemenu)
 #setting up the file submenu
 filemenu.add_command(label="New Conversation", command=NewFile)
 filemenu.add_command(label="Open Conversation...", command=OpenFile)
+filemenu.add_separator()
+filemenu.add_command(label="Save Keystring", command=Save_KS)
+filemenu.add_command(label="Open Keystring...", command=Load_KS)
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=root.quit)
 
