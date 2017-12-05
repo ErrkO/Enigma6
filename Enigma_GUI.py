@@ -8,6 +8,9 @@ import string
 #from enigma import * #Enigma Encryption Code
 #from enigma_net import * #Enigma networking code
 
+#import(enigma)
+#import(enigma_net)
+
 """Globals"""
 rotorNum = 0
 rotorPos = []
