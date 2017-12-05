@@ -1,0 +1,1 @@
+Just double click on the "Enigma_GUI.py" file and click set all settings, it will run you through the entire application and it has proper data validation.
